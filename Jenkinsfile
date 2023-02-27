@@ -6,6 +6,7 @@ echo "Node name is: ${env.NODE_NAME}"
 echo "Jenkins Home dir is: ${env.JENKINS_HOME}"
 def mavenHome = tool name :"maven3.8.7"
 try{
+sendSlackNotification('STARTED')
 stage('ChekcoutCode'){
 git branch: 'development', credentialsId: 'f3b26d4d-8d92-459d-a58c-3104193a58a3', url: 'https://github.com/avulaprudviraj/maven-web-application.git'
 }
