@@ -82,7 +82,7 @@ pipeline {
         stage('checkout code') {
             steps {
                 echo 'Getting code from SCM'
-                git 'https://github.com/MithunTechnologiesDevOps/maven-web-application.git'
+                git credentialsId: 'Git', url: 'https://github.com/avulaprudviraj/maven-web-application.git'
                 
             }
         }
