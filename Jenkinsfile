@@ -1,4 +1,4 @@
-node
+/*node
 {
 echo "The job name is ${env.JOB_NAME}"
 echo "The build number is ${env.BUILD_NUMBER}"
@@ -65,4 +65,70 @@ def sendSlackNotification(String buildStatus = 'STARTED') {
   // Send notifications
   slackSend (color: colorCode, message: summary, channel:'#hdfcbank')
   
+} */
+
+pipeline {
+    agent any
+    
+    tools {
+  maven 'Maven 3.9.9'
+    }
+    environment{
+        buildNumber = "${Build_Number}"
+        
+    }
+
+    stages {
+        stage('checkout code') {
+            steps {
+                echo 'Getting code from SCM'
+                git 'https://github.com/MithunTechnologiesDevOps/maven-web-application.git'
+                
+            }
+        }
+        stage('Building the package') {
+            steps {
+                echo 'Building the package by using Maven Build Tool'
+                sh "mvn clean package"
+                
+            }
+        }
+        stage('Building the image') {
+            steps {
+                echo 'Building the image by using Docker'
+                sh "docker build -t dockerhandson302/maven-web-application:${buildNumber} ."
+                sh "ls -lrt"
+                
+            }
+        }
+        stage('Login to Dokcer hub') {
+            steps {
+                withCredentials([string(credentialsId: 'Dockerpass', variable: 'Docker')]) {
+                    
+                sh "docker login -u dockerhandson302 -p ${Docker}"
+                
+                }
+                
+                
+            }
+        }
+        stage('Push to Dokcer hub') {
+            steps {
+                echo 'Pushinh the image in to Dokcer hub'
+                sh "docker push dockerhandson302/maven-web-application:${buildNumber}"
+                
+            }
+        }
+        stage('create a conatiner in deployment server') {
+            steps {
+                echo 'create a container'
+                sshagent(['Docker_deplotment_server']) {
+                  sh "ssh -o StrictHostKeyChecking=no ubuntu@172.31.3.106 docker rm -f mavencnt || true"
+                  sh "ssh -o StrictHostKeyChecking=no ubuntu@172.31.3.106 docker run -d --name mavencnt -p 80:8080 dockerhandson302/maven-web-application:${buildNumber}"
+                }
+                
+            }
+        }
+    }
 }
+
