@@ -1,7 +1,7 @@
 version: '3.1'
 services:
   mavenappcnt:
-    image: dockerhandson/maven-web-app:VERSION
+    image: dockerhandson302/maven-web-application:VERSION
     restart: always
     ports:
     - 8080:8080
