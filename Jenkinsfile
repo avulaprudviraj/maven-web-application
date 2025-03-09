@@ -120,6 +120,8 @@ pipeline{
         stage('Creating a container in deployment server'){
             steps{
                 sshagent(['Docker']) {
+
+                  sh "ssh StrictHostKeyChecking=no ${Remote_User}@${Remote_Host} ls -lrt"
                  
                  sh "ssh StrictHostKeyChecking=no ${Remote_User}@${Remote_Host} docker rm -f flipkartcnt || true"
                  sh "ssh ${Remote_User}@${Remote_Host} docker run -d --name flipkartcnt -p 8080:8080 ${Image_Name}:${Image_Tag}"
