@@ -122,9 +122,7 @@ pipeline{
                 sshagent(['Docker']) {
                  
                  sh "ssh StrictHostKeyChecking=no ${Remote_User}@${Remote_Host} docker rm -f flipkartcnt || true"
-                 sh "ssh ${Remote_User}@${Remote_Host} docker network rm mavenbridge"
-                 sh "ssh ${Remote_User}@${Remote_Host} docker network create mavenbridge"
-                 sh "ssh ${Remote_User}@${Remote_Host} docker run -d --name flipkartcnt -p 8080:8080 --network mavenbridge ${Image_Name}:${Image_Tag}"
+                 sh "ssh ${Remote_User}@${Remote_Host} docker run -d --name flipkartcnt -p 8080:8080 ${Image_Name}:${Image_Tag}"
                 }
             }
         }
