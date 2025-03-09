@@ -73,6 +73,10 @@ pipeline{
         maven 'Maven 3.9.9'
         
     }
+    triggers {
+  githubPush()
+   }
+
     environment{
         
         Image_Tag = "${BUILD_NUMBER}"
