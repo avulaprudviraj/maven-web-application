@@ -67,66 +67,61 @@ def sendSlackNotification(String buildStatus = 'STARTED') {
   
 } */
 
-pipeline {
+pipeline{
     agent any
-    
-    tools {
-  maven 'Maven 3.9.9'
-    }
-    environment{
-        buildNumber = "${Build_Number}"
+    tools{
+        maven 'Maven 3.9.9'
         
     }
-
-    stages {
-        stage('checkout code') {
-            steps {
-                echo 'Getting code from SCM'
-                git credentialsId: 'Git', url: 'https://github.com/avulaprudviraj/maven-web-application.git'
-                
+    environment{
+        
+        Image_Tag = "${BUILD_NUMBER}"
+        Image_Name = "dockerhandson302/maven-web-application"
+        Remote_User = "ubuntu"
+        Remote_Host = "172.31.4.81"
+        
+    }
+    stages{
+        stage('checking code form git'){
+            steps{
+                git credentialsId: 'Github_credentials', url: 'https://github.com/avulaprudviraj/maven-web-application.git'
             }
         }
-        stage('Building the package') {
-            steps {
-                echo 'Building the package by using Maven Build Tool'
+        stage('Build the package of war file'){
+            steps{
+                sh "mvn -version"
                 sh "mvn clean package"
-                
             }
         }
-        stage('Building the image') {
-            steps {
-                echo 'Building the image by using Docker'
-                sh "docker build -t dockerhandson302/maven-web-application:${buildNumber} ."
+        stage('Building the image by using docker'){
+            steps{
+                sh "docker build -t ${Image_Name}:${Image_Tag} ."
                 sh "ls -lrt"
                 
             }
         }
-        stage('Login to Dokcer hub') {
-            steps {
-                withCredentials([string(credentialsId: 'Dockerpass', variable: 'Docker')]) {
+        stage('login in to dockerhub'){
+            steps{
+                withCredentials([string(credentialsId: 'dockerpassword', variable: 'Password')]) {
                     
-                sh "docker login -u dockerhandson302 -p ${Docker}"
-                
+                 sh "docker login -u dockerhandson302 -p ${Password}"
                 }
-                
-                
             }
         }
-        stage('Push to Dokcer hub') {
-            steps {
-                echo 'Pushinh the image in to Dokcer hub'
-                sh "docker push dockerhandson302/maven-web-application:${buildNumber}"
-                
+        stage('Push image in to docker hub'){
+            steps{
+                sh "docker push ${Image_Name}:${Image_Tag}"
             }
         }
-        stage('create a conatiner in deployment server') {
-            steps {
-                echo 'create a container'
-                sshagent(['Docker_deplotment_server']) {
-                  sh "ssh -o StrictHostKeyChecking=no ubuntu@172.31.3.106 docker rm -f mavencnt || true"
-                  sh "ssh -o StrictHostKeyChecking=no ubuntu@172.31.3.106 docker run -d --name mavencnt -p 80:8080 dockerhandson302/maven-web-application:${buildNumber}"
+        stage('Creating a container in deployment server'){
+            steps{
+                sshagent(['Docker']) {
+                 
+                 sh "ssh StrictHostKeyChecking=no ${Remote_User}@${Remote_Host} docker rm -f flipkartcnt || true"
+                 sh "ssh ${Remote_User}@${Remote_Host} docker network rm mavenbridge"
+                 sh "ssh ${Remote_User}@${Remote_Host} docker network create mavenbridge"
+                 sh "ssh ${Remote_User}@${Remote_Host} docker run -d --name flipkartcnt -p 8080:8080 --network mavenbridge ${Image_Name}:${Image_Tag}"
                 }
-                
             }
         }
     }
